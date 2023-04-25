@@ -2,7 +2,7 @@ const { Router } = require("express");
 const { Libros } = require("../db.js");
 const router = Router();
 
-router.get("/libro", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const libroData = await Libros.findAll();
 
@@ -17,7 +17,7 @@ router.get("/libro", async (req, res) => {
   }
 });
 
-router.post("/libros", async (req, res) => {
+router.post("/", async (req, res) => {
   if (!req.body) {
     res.status(400).send("No se enviaron datos en la solicitud.");
     return;
