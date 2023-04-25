@@ -3,7 +3,7 @@ const libros = require("../routes/Libros");
 require("../db")
 const router = Router();
 
-router.use("libros",libros);
+router.use(libros);
 
 
 

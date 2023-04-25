@@ -2,7 +2,7 @@ const { Router } = require("express");
 const { Libros } = require("../db.js");
 const router = Router();
 
-router.get("/", async (req, res) => {
+router.get("/libros", async (req, res) => {
   try {
     const libroData = await Libros.findAll();
 
@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/libros", async (req, res) => {
   if (!req.body) {
     res.status(400).send("No se enviaron datos en la solicitud.");
     return;
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
       name,
       category,
       Image,
-      link
+      link,
     });
     res.status(200).json(datos);
   } catch (error) {
@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/libros/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -55,10 +55,6 @@ router.get("/:id", async (req, res) => {
     console.log(error);
     res.status(500).json({ error: "no libro" });
   }
-})
-  
-
-
-
+});
 
 module.exports = router;
