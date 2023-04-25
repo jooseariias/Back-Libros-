@@ -40,4 +40,25 @@ router.post("/libros", async (req, res) => {
   }
 });
 
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pdf = await Libros.findByPk(id);
+
+    if (!pdf) {
+      return res.status(404).json({ error: "no libro" });
+    }
+
+    res.status(200).json(pdf);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "no libro" });
+  }
+})
+  
+
+
+
+
 module.exports = router;
