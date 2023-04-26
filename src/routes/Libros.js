@@ -57,4 +57,33 @@ router.get("/libros/:id", async (req, res) => {
   }
 });
 
+router.put("/libros/:id", async (req, res) => {
+  try {
+    const libroUpdate = await Libros.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    if (libroUpdate) {
+      let data = { ...req.body };
+
+      let keys = Object.keys(data);
+
+      keys.forEach((k) => {
+        libroUpdate[k] = data[k];
+      });
+
+      await libroUpdate.save();
+
+      res.status(200).send(libroUpdate);
+    } else {
+      res.status(404);
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
 module.exports = router;
