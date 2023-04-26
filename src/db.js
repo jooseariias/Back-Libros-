@@ -34,9 +34,22 @@ let capsEntries = entries.map((entry) => [entry[0][0].toUpperCase() + entry[0].s
 sequelize.models = Object.fromEntries(capsEntries);
 
 
-const { Libros } = sequelize.models;
+const { Bajada, Calificacion, Genero, Libro, Subida, Usuario } = sequelize.models;
 
+Usuario.belongsToMany(Libro, {through: Subida });
+Libro.belongsToMany(Usuario, {through: Subida });
 
+Usuario.belongsToMany(Libro, {through: Bajada });
+Libro.belongsToMany(Usuario, {through: Bajada });
+
+Libro.hasMany(Calificacion);
+Calificacion.belongsTo(Libro);
+
+Libro.belongsToMany(Genero, {through: "libro_genero"});
+Genero.belongsToMany(Libro, {through: "libro_genero"});
+
+Usuario.hasMany(Calificacion);
+Calificacion.belongsTo(Usuario);
 
 
 
