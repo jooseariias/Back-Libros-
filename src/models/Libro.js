@@ -2,10 +2,9 @@ const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
   sequelize.define('libro', {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      allowNull: true,
+    isbn: {
+      type: DataTypes.STRING,
+      allowNull: false,
       primaryKey: true
     },
     titulo: {

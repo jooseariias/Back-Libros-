@@ -1,9 +1,14 @@
 const { Router } = require("express");
-const libros = require("../routes/Libros");
-require("../db")
+
 const router = Router();
 
-router.use(libros);
+
+const librosRuta = require("./rutaLibros");
+const usuariosRuta = require('./rutaUsuarios')
+// require("../db")
+
+router.use('/libros', librosRuta);
+router.use('/usuarios', usuariosRuta)
 
 
 

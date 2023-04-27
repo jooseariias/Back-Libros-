@@ -51,6 +51,8 @@ Genero.belongsToMany(Libro, {through: "libro_genero"});
 Usuario.hasMany(Calificacion);
 Calificacion.belongsTo(Usuario);
 
+Libro.belongsToMany(Usuario, {through: "libro_autor"})
+Usuario.belongsToMany(Libro, {through: "libro_autor"})
 
 
 module.exports = {

@@ -1,6 +1,45 @@
 const { Router } = require("express");
-const { Libros } = require("../db.js");
+const { Libro, Usuario } = require("../db.js");
 const router = Router();
+
+
+router.post('/', async (req, res) => {
+  try {
+    const {isbn, titulo, sinopsis, fecha, cantidadDePaginas, imagenDeTapa, linkDescarga, autores } = req.body;
+
+    console.log("autores es: ", autores)
+    if(!isbn || !titulo || !sinopsis || !fecha || !cantidadDePaginas || !imagenDeTapa || !linkDescarga || !autores){
+      res.status(400).json({msg: "Datos faltantes para crear un libro"})
+    }else {
+
+      const libroEncontrado = await Libro.findOne({
+        where: {
+          isbn
+        }
+      })
+
+      if(!libroEncontrado){
+        const libro = Libro.create({
+          isbn,
+          titulo,
+          sinopsis,
+          fecha,
+          cantidadDePaginas,
+          imagenDeTapa,
+          activo: true,
+          linkDescarga
+        });
+
+        res.status(200).json(libro)
+      }else {
+        res.status(400).json({msg: 'El libro ya esta dado de alta con ese ISBN'})
+      }
+    }
+
+  }catch(error){
+    res.status(400).json({error: error.message})
+  }
+})
 
 router.get("/libros", async (req, res) => {
   try {
