@@ -55,7 +55,7 @@ const { DataTypes } = require('sequelize');
     }
   },
    {
-    
+
     timestamps: true
 
   })
