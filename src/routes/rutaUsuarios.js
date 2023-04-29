@@ -9,7 +9,7 @@ const router = Router();
 
 router.post('/', async (req, res) => {
     try{
-        const { nombre, apellido, password, email, rol, imagen, telefono, instagram } = req.body 
+        const { nombre, apellido, password, email, rol, imagen, telefono, instagram, fechaNacimiento} = req.body 
         
         const usuarioExistente = await Usuario.findOne({
             where: {
@@ -26,11 +26,12 @@ router.post('/', async (req, res) => {
                 rol,
                 imagen, 
                 telefono,
-                instagram
+                instagram,
+                fechaNacimiento
             })
             const token = jwt.sign({ email }, "secret");
 
-            return res.status(200).send({ message: "User registered", token });
+            return res.status(200).send({ message: "User registered", token, nuevoUsuario});
             // res.status(200).json(nuevoUsuario)
         }else {
             res.status(400).json({msg: `El usuario con email ${email} ya existe en la base de datos`})

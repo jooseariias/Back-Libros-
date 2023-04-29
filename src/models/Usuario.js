@@ -52,6 +52,10 @@ const { DataTypes } = require('sequelize');
     instagram: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    fechaNacimiento: {
+      type: DataTypes.DATEONLY,
+      allowNull: false
     }
   },
    {
