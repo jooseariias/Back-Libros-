@@ -36,6 +36,9 @@ sequelize.models = Object.fromEntries(capsEntries);
 
 const { Bajada, Calificacion, Genero, Libro, Subida, Usuario } = sequelize.models;
 
+Usuario.belongsToMany(Libro, {through: "libro_autor"})
+Libro.belongsToMany(Usuario, {through: "libro_autor"})
+
 Usuario.belongsToMany(Libro, {through: Subida });
 Libro.belongsToMany(Usuario, {through: Subida });
 
@@ -51,8 +54,8 @@ Genero.belongsToMany(Libro, {through: "libro_genero"});
 Usuario.hasMany(Calificacion);
 Calificacion.belongsTo(Usuario);
 
-Libro.belongsToMany(Usuario, {through: "libro_autor"})
-Usuario.belongsToMany(Libro, {through: "libro_autor"})
+
+
 
 
 module.exports = {
