@@ -1,11 +1,12 @@
 const { Router } = require("express");
 const { Libro, Usuario, Subida, Genero } = require("../db.js");
 const { conn } = require("../db.js");
+const { Op } = require("sequelize");
 
 const router = Router();
 
 router.post("/", async (req, res) => {
-  // const transaction = await conn.transaction();
+  const transaction = await conn.transaction();
   try {
     const {
       isbn,
@@ -92,6 +93,7 @@ router.post("/", async (req, res) => {
           })
           await nuevoLibro.addGenero(genero)
         }
+        await transaction.commit();
         res.status(200).json(nuevoLibro);
       } else {
         res
@@ -100,94 +102,88 @@ router.post("/", async (req, res) => {
       }
     }
   } catch (error) {
-    // await transaction.rollback();
+    await transaction.rollback();
     // console.log("entra aca")
-    console.log("error es: ", error)
+    // console.log("error es: ", error)
     res.status(400).json(error);
   }
 });
 
-router.get("/libros", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const libroData = await Libros.findAll();
+    const { nombreLibro } = req.query;
 
-    if (libroData) {
-      res.status(200).json(libroData);
-    } else {
-      res.status(400);
-      s;
-    }
-  } catch (error) {
-    console.log(error);
-  }
-});
+    if(nombreLibro){
+     
 
-router.post("/libros", async (req, res) => {
-  if (!req.body) {
-    res.status(400).send("No se enviaron datos en la solicitud.");
-    return;
-  }
-
-  console.log(req.body);
-  const { name, category, Image, link } = req.body;
-
-  try {
-    const datos = await Libros.create({
-      name,
-      category,
-      Image,
-      link,
-    });
-    res.status(200).json(datos);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Ha ocurrido un error al crear el libro.");
-  }
-});
-
-router.get("/libros/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const pdf = await Libros.findByPk(id);
-
-    if (!pdf) {
-      return res.status(404).json({ error: "no libro" });
+      const libro = await Libro.findAll({
+        where: {
+          titulo: {
+            [Op.iLike]: `%${nombreLibro}%`
+          }
+        }
+      })
+      
+      console.log(libro)
+      libro.length > 0 ? res.status(200).json(libro) 
+        : res.status(400).json({message: `Libro no encontrado`})
+    }else {
+      const libro = await Libro.findAll()
+      
+      libro.length > 0 ? res.status(200).json(libro) 
+        : res.status(400).json({message: `No hay libros en la base de datos`})
     }
 
-    res.status(200).json(pdf);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "no libro" });
+  }catch(error){
+    res.status(400).json({error: error.message})
   }
-});
+})
 
-router.put("/libros/:id", async (req, res) => {
-  try {
-    const libroUpdate = await Libros.findOne({
-      where: {
-        id: req.params.id,
-      },
-    });
 
-    if (libroUpdate) {
-      let data = { ...req.body };
 
-      let keys = Object.keys(data);
+// router.get("/libros/:id", async (req, res) => {
+//   const { id } = req.params;
 
-      keys.forEach((k) => {
-        libroUpdate[k] = data[k];
-      });
+//   try {
+//     const pdf = await Libros.findByPk(id);
 
-      await libroUpdate.save();
+//     if (!pdf) {
+//       return res.status(404).json({ error: "no libro" });
+//     }
 
-      res.status(200).send(libroUpdate);
-    } else {
-      res.status(404);
-    }
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+//     res.status(200).json(pdf);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ error: "no libro" });
+//   }
+// });
+
+// router.put("/libros/:id", async (req, res) => {
+//   try {
+//     const libroUpdate = await Libros.findOne({
+//       where: {
+//         id: req.params.id,
+//       },
+//     });
+
+//     if (libroUpdate) {
+//       let data = { ...req.body };
+
+//       let keys = Object.keys(data);
+
+//       keys.forEach((k) => {
+//         libroUpdate[k] = data[k];
+//       });
+
+//       await libroUpdate.save();
+
+//       res.status(200).send(libroUpdate);
+//     } else {
+//       res.status(404);
+//     }
+//   } catch (error) {
+//     res.status(400).json({ error: error.message });
+//   }
+// });
 
 module.exports = router;
