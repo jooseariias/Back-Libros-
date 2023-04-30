@@ -9,6 +9,17 @@ const nodemailer = require("nodemailer");
 
 const router = Router();
 
+
+// envio de email
+const transporter = nodemailer.createTransport({
+    service: "hotmail",
+    auth: {
+      user: process.env.EMAIL_INKCLOUDJ,
+      
+      pass: process.env.EMAIL_INKCLOUDJ_PASSWORD,
+    },
+  });
+
 router.post('/', async (req, res) => {
     try{
         const { nombre, apellido, password, email, rol, imagen, telefono, instagram, fechaNacimiento} = req.body 
@@ -143,6 +154,77 @@ router.post('/login' , async (req, res) => {
     }
 
 })
+
+
+// cambio de contraseña gleysmer
+
+router.post("/code", async (req, res) => {
+    const { email } = req.body;
+  
+    try {
+      const user = await Usuario.findOne({ where: { email } });
+  
+      if (!user) {
+        return res
+          .status(404)
+          .json({
+            message: "No se encontró ningún usuario con ese correo electrónico.",
+          });
+      }
+  
+      const confirmationCode = Math.floor(100000 + Math.random() * 900000);
+      user.resetPasswordCode = confirmationCode;
+      await user.save();
+      const mailOptions = {
+        from: "INKCLOUDJ@hotmail.com",
+        to: user.email,
+        subject: "Cambio de contraseña",
+        text: `Su código de confirmación es: ${confirmationCode}`,
+      };
+  
+      await transporter.sendMail(mailOptions);
+  
+      res.json({ message: "A confirmation code has been sent to your email." });
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ message: "Ocurrió un error al procesar su solicitud." });
+    }
+  });
+  
+  router.post("/resetPassword", async (req, res) => {
+    const { email, code, password } = req.body;
+  
+    try {
+      const user = await Usuario.findOne({ where: { email: email } });
+  
+      if (!user) {
+        return res
+          .status(404)
+          .json({ message: "Not user found with that email." });
+      }
+  
+      // Verificar que el código proporcionado por el usuario coincide con el código enviado por correo electrónico
+      if (code !== user.resetPasswordCode) {
+        return res
+          .status(400)
+          .json({ message: "The confirmation code is invalid." });
+      }
+  
+      user.password = bcrypt.hashSync(password, 8);
+      await user.save();
+  
+      // Generar y enviar token de autenticación al cliente
+  
+      res.json({ message: "Your password has been successfully changed." });
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ message: "Ocurrió un error al procesar su solicitud." });
+    }
+  });
 
 
 module.exports = router;
