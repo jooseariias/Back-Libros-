@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const { Libro, Usuario, Subida, Genero } = require("../db.js");
+const { Libro, Usuario, Subida, Genero, libro_autor } = require("../db.js");
 const { conn } = require("../db.js");
 const { Op } = require("sequelize");
 
@@ -30,8 +30,8 @@ router.post("/", async (req, res) => {
       !cantidadDePaginas ||
       !imagenDeTapa ||
       !linkDescarga ||
-      !autores || 
-      !generos || 
+      !autores ||
+      !generos ||
       !idUsuario
     ) {
       res.status(400).json({ msg: "Datos faltantes para crear un libro" });
@@ -109,81 +109,134 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const { nombreLibro } = req.query;
 
-    if(nombreLibro){
-     
+    const { nombreAutor, nombreLibro } = req.query;
 
-      const libro = await Libro.findAll({
+    if(nombreAutor && nombreLibro){
+      const autores = await Usuario.findAll({
         where: {
-          titulo: {
-            [Op.iLike]: `%${nombreLibro}%`
+          nombre: {
+            [Op.iLike]: `%${nombreAutor}%`
           }
         }
+      });
+
+      if (autores.length === 0) {
+        return res.status(404).json({ error: 'Autor no encontrado' });
+      }
+
+      const librosPromises = autores.map((autor) =>
+        autor.getLibros({
+          where: {
+            titulo: {
+              [Op.iLike]: `%${nombreLibro}%`
+            }
+          }
+        })
+      );
+
+      const libros = await Promise.all(librosPromises);
+      
+      const nombresAutores = autores.map((autor) => autor.nombre);
+      return res.status(200).json({ nombreAutor: nombresAutores, libros: libros.flat() });
+   }
+
+
+   if (!nombreAutor && nombreLibro) {
+    const libros = await Libro.findAll({
+      where: {
+        titulo: {
+          [Op.iLike]: `%${nombreLibro}%`
+        }
+      },
+      include: {
+        model: Usuario,
+        attributes: ['nombre']
+      }
+    });
+  
+    const librosConAutores = await Promise.all(
+      libros.map(async (libro) => {
+        const autores = await libro.getUsuarios();
+        return {
+          libro: libro,
+          autores: autores
+        };
       })
-      
-      console.log(libro)
-      libro.length > 0 ? res.status(200).json(libro) 
-        : res.status(400).json({message: `Libro no encontrado`})
-    }else {
-      const libro = await Libro.findAll()
-      
-      libro.length > 0 ? res.status(200).json(libro) 
-        : res.status(400).json({message: `No hay libros en la base de datos`})
-    }
-
-  }catch(error){
-    res.status(400).json({error: error.message})
+    );
+  
+    return res.status(200).json(librosConAutores);
   }
-})
+
+  if(nombreAutor && !nombreLibro){
+    const autores = await Usuario.findAll({
+      where: {
+        nombre: {
+          [Op.iLike]: `%${nombreAutor}%`
+        }
+      },
+      include: {
+        model: Libro,
+        through: {
+          attributes: []
+        },  
+      }
+    });
+      
+    return res.status(200).json(autores);
+  }
+  
+  } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: 'Error al obtener los libros del autor' });
+  }
+});
 
 
+router.get('/:idUsuario', async (req, res) => {
+  try {
+    const idUsuario = req.params.idUsuario;
+    const usuario = await Usuario.findByPk(idUsuario);
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    const libros = await usuario.getLibros();
+    return res.status(200).json({ libros: libros });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Error al obtener los libros del autor' });
+  }
+});
 
-// router.get("/libros/:id", async (req, res) => {
-//   const { id } = req.params;
 
-//   try {
-//     const pdf = await Libros.findByPk(id);
+router.put("/libros/:id", async (req, res) => {
+  try {
+    const libroUpdate = await Libros.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
 
-//     if (!pdf) {
-//       return res.status(404).json({ error: "no libro" });
-//     }
+    if (libroUpdate) {
+      let data = { ...req.body };
 
-//     res.status(200).json(pdf);
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ error: "no libro" });
-//   }
-// });
+      let keys = Object.keys(data);
 
-// router.put("/libros/:id", async (req, res) => {
-//   try {
-//     const libroUpdate = await Libros.findOne({
-//       where: {
-//         id: req.params.id,
-//       },
-//     });
+      keys.forEach((k) => {
+        libroUpdate[k] = data[k];
+      });
 
-//     if (libroUpdate) {
-//       let data = { ...req.body };
+      await libroUpdate.save();
 
-//       let keys = Object.keys(data);
-
-//       keys.forEach((k) => {
-//         libroUpdate[k] = data[k];
-//       });
-
-//       await libroUpdate.save();
-
-//       res.status(200).send(libroUpdate);
-//     } else {
-//       res.status(404);
-//     }
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// });
+      res.status(200).send(libroUpdate);
+    } else {
+      res.status(404);
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 module.exports = router;
