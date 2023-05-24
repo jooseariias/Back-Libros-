@@ -71,19 +71,20 @@ router.post("/", async (req, res) => {
         // await nuevoLibro.setSubida(nuevaSubida);
         // await nuevoLibro.setUsuario()
 
+        console.log("autores: ", autores)
         for(let i = 0; i < autores.length; i++) {
-          // console.log(autores[i])
+          console.log("autores[i] es ", autores[i])
           const nuevoAutor = await Usuario.findOne({
             where: {
               id: autores[i].id,
             },
           });
 
-          // console.log("nuevoAutor es: ", nuevoAutor); // Verificar si hay algún resultado
+          console.log("nuevoAutor es: ", nuevoAutor); // Verificar si hay algún resultado
 
           // await nuevoAutor.addLibro
           // await nuevoLibro.setUsuario(nuevoAutor)
-          await nuevoLibro.addUsuario(nuevoAutor);
+          // await nuevoLibro.addUsuario(nuevoAutor);
         }
         for(let i = 0; i < generos.length; i++){
           const genero = await Genero.findOne({
@@ -105,7 +106,7 @@ router.post("/", async (req, res) => {
     await transaction.rollback();
     // console.log("entra aca")
     // console.log("error es: ", error)
-    res.status(400).json(error);
+    res.status(400).json({error: error.message});
   }
 });
 
@@ -186,6 +187,12 @@ router.get('/', async (req, res) => {
     });
       
     return res.status(200).json(autores);
+  }
+
+  if(!nombreAutor && !nombreLibro){
+    const libros = await Libro.findAll()
+
+    res.status(200).json(libros)
   }
   
   } catch (error) {
